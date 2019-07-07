@@ -17,6 +17,24 @@ import config from '../config/config'
 import inquirer from 'inquirer'
 import request from './requests'
 import dt from './utils/date'
+import CronJob from 'cron'
+import sleep from 'await-sleep'
+
+
+// let sleep = (ms) => {
+//   return new Promise(resolve => setTimeout(resolve, ms))
+// }
+
+let startGetPiece = async (data) => {
+  request.save(data)
+    .then(orderNo => {
+        console.log('get one piece!')
+    }).catch(error => {
+        console.log('error! so attempt once!',error)
+        sleep(100)
+        startGetPiece(data)
+    })
+}
 
 let save = data => {
   inquirer.prompt([{
@@ -26,13 +44,14 @@ let save = data => {
     default: true
   }]).then(ans => {
     if(ans.confirm) {
-      request.save(data)
-        .then(orderNo => {
-            console.log('恭喜！抢号成功！订单号：' + orderNo + '。请在微信公众号京医通-个人中心-我的账户-挂号订单中继续支付。')
-        }).catch(error => {
-          console.log('没挂上!', error)
-          save(data)
-        })
+      // request.save(data)
+      //   .then(orderNo => {
+      //       console.log('恭喜！抢号成功！订单号：' + orderNo + '。请在微信公众号京医通-个人中心-我的账户-挂号订单中继续支付。')
+      //   }).catch(error => {
+      //     console.log('没挂上!', error)
+      //     save(data)
+      //   })
+      startGetPiece(data)
     }}
   )
 }
@@ -56,8 +75,8 @@ inquirer.prompt([
   }
 ])
 .then((ansUcp) => {
-  request.setUcp(ansUcp.ucp)
-  return request.getHosList()
+    request.setUcp(ansUcp.ucp)
+    return request.getHosList()
 })
 .then(hosList => inquirer.prompt([
   {
